@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=UA-62792312-1"
+      type="af765a949905cc4bdb433d81-text/javascript"
+    ></script>
+    <script type="af765a949905cc4bdb433d81-text/javascript">
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'UA-62792312-1');
+    </script>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>Inpaint Online</title>
+    <!-- <link rel="icon" href="/favicon.ico" type="image/ico" /> -->
+    <meta name="description" content="Inpaint Online" />
+    <meta name="keywords" content="Inpaint Online" />
+    <!-- <link href="/font-awesome/css/font-awesome.min.css" rel="stylesheet"> -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.1/css/bootstrap-grid.min.css"
+      integrity="sha512-Aa+z1qgIG+Hv4H2W3EMl3btnnwTQRA47ZiSecYSkWavHUkBF2aPOIIvlvjLCsjapW1IfsGrEO3FU693ReouVTA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link href="css/editor.css" rel="stylesheet" />
+    <link href="css/navbar-fixed-left.css" rel="stylesheet" />
+  </head>
+  <body>
+    <nav
+      class="navbar navbar-default navbar-fixed-top unselectable"
+      role="navigation"
+    >
+      <div class="container-fluid">
+        <div id="navbar" class="navbar-btn">
+          <a
+          data-act="clear"
+          data-arg=""
+          nohref="1"
+          class="disabled btn btn-default"
+          title="Clear Selections"
+          ><img src="images/editor/clear.svg"
+        />&nbsp;Clear&nbsp;</a>
+            <a
+              data-act="process"
+              data-arg=""
+              nohref="1"
+              class="disabled btn btn-success"
+              title="Start Processing"
+              ><img src="images/editor/run.svg" />&nbsp;Erase&nbsp;</a
+            >
+          </div>
+          <div class="btn-group hidden-xs">
+            <input
+              type="range"
+              min="1"
+              max="100"
+              value="30"
+              class="slider"
+              id="markerSize"
+              title="Marker Size"
+            />
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div>
+      <nav class="navbar navbar-default navbar-fixed-left unselectable">
+        <div class="container">
+          <div class="navbar-btn-vertical">
+            <div class="btn-group-vertical" data-toggle="buttons">
+              <a
+                data-act="setMarker"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default active"
+                title="Marker Tool"
+              >
+                <input type="radio" name="tool" />
+                <img src="images/editor/marker.svg" />
+              </a>
+              <a
+                data-act="setLasso"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default"
+                title="Lasso Tool"
+              >
+                <input type="radio" name="tool" />
+                <img src="images/editor/lasso.svg" />
+              </a>
+              <a
+                data-act="setPolygon"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default"
+                title="Polygonal Lasso Tool"
+              >
+                <input type="radio" name="tool" />
+                <img src="images/editor/polygon.svg" />
+              </a>
+
+              <a
+                data-act="setEraser"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default"
+                title="Eraser Tool"
+              >
+                <input type="radio" name="tool" /><img
+                  src="images/editor/eraser.svg"
+                />
+              </a>
+
+              <a
+                data-act="setMove"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default"
+                title="Move Image"
+              >
+                <input type="radio" name="tool" /><img
+                  src="images/editor/move.svg"
+                />
+              </a>
+            </div>
+            <div class="btn-group-vertical" data-toggle="buttons">
+              <a
+                data-act="setMask"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default active"
+                title="Mask"
+              >
+                <input type="radio" name="layer" />
+                <img src="images/editor/red.svg" />
+              </a>
+              <a
+                data-act="setDonor"
+                data-arg=""
+                nohref="1"
+                class="btn btn-default"
+                title="Donor"
+              >
+                <input type="radio" name="layer" />
+                <img src="images/editor/green.svg" />
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="row">
+      <div class="col-lg-12">
+        <canvas id="mainCanvas">
+          Your browser does not support the HTML 5 Canvas.
+        </canvas>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="progressDialog"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 id="progressDlgTitle" class="modal-title">Processing</h4>
+          </div>
+          <div class="modal-body">
+            <div class="progress">
+              <div
+                class="progress-bar progress-bar-striped active"
+                role="progressbar"
+                aria-valuenow="100"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width: 100%"
+              >
+                <span class="sr-only">100% Complete</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="modal fade"
+      id="messageDlg"
+      tabindex="-1"
+      role="dialog"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 id="messageDlgTitle" class="modal-title"></h4>
+          </div>
+          <div class="modal-body">
+            <p id="messageDlgText"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+      integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-v4-rtl/4.6.0-2/js/bootstrap.min.js"
+      integrity="sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/javascript-canvas-to-blob/3.28.0/js/canvas-to-blob.min.js"
+      integrity="sha512-Q0RYciuNUJLzUgA9T0A0yj1A5wR+rM7MDr3hKBJuNBaSW5O2TqRyBMMLswe7Z/M9czXRnD/5mh1/xQpDpxFZaA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"
+      integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/utils.js?v=1"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/eventdispather.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/layer.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/rect.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/layersview.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/scribblelayer.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/imagelayer.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/undostack.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/model.js"
+    ></script>
+    <script
+      type="af765a949905cc4bdb433d81-application/javascript"
+      src="js/editor.js?v=7"
+    ></script>
+    <script type="af765a949905cc4bdb433d81-application/javascript">
+      document.body.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      function GetIEVersion() {
+      	var sAgent = window.navigator.userAgent;
+      	var Idx = sAgent.indexOf("MSIE");
+      	// If IE, return version number.
+      	if (Idx > 0)
+      		return parseInt(sAgent.substring(Idx + 5, sAgent.indexOf(".", Idx)));
+      	// If IE 11 then look for Updated user agent string.
+      	else if (!!navigator.userAgent.match(/Trident\/7\./))
+      		return 11;
+      	else
+      		return 0; //It is not IE
+      }
+
+      function showProgress(caption) {
+      	if (typeof caption !== 'undefined') {
+      		$('#progressDlgTitle').text(caption);
+      	}
+      	$('#progressDialog').modal('show');
+      }
+      function hideProgress() {
+      	$('#progressDialog').modal('hide');
+      }
+
+      function showOrderDlg() {
+      	$('#downloadModal').modal('show');
+      }
+      function showMessage(caption, text) {
+      	hideProgress();
+      	if (caption) {
+      		$('#messageDlgTitle').text(caption);
+      	}
+      	if (caption) {
+      		$('#messageDlgText').text(text);
+      	}
+      	$('#messageDlg').modal('show');
+      }
+
+      $(document).ready(function () {
+      	if (GetIEVersion() > 0) {
+      		showMessage("Error", "Sorry but Internet Explorer is not supported");
+      		return;
+      	}
+      	showProgress("Loading...");
+      	var model = new Model();
+      	model.stateChangeEvent.attach(function (_model, state) {
+      		switch (state) {
+      			case ModelState.MODEL_LOADED:
+      				window.editor = new Editor(model, document.getElementById("mainCanvas"));
+      				window.addEventListener('resize', window.editor.fitToContainer, false);
+      				hideProgress();
+      				break;
+      			case ModelState.IMAGE_LOAD_STARTED:
+      				showProgress("Loading...");
+      				break;
+      			case ModelState.IMAGE_LOAD_FINISHED:
+      				hideProgress();
+      				break;
+      			case ModelState.INPAINT_STARTED:
+      				showProgress("Inpainting...");
+      				break;
+      			case ModelState.INPAINT_FINISHED:
+      				hideProgress();
+      				break;
+      		}
+      	});
+      });
+
+      document.addEventListener('touchstart', function (e) {
+      	if (e.touches.length > 1)
+      		e.preventDefault();
+      });
+    </script>
+    <script
+      src="https://ajax.cloudflare.com/cdn-cgi/scripts/7d0fa10a/cloudflare-static/rocket-loader.min.js"
+      data-cf-settings="af765a949905cc4bdb433d81-|49"
+      defer=""
+    ></script>
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"rayId":"656cc8bcbb567351","token":"ad3e14a6cbc348888805803145bc8b37","version":"2021.5.2","si":10}'
+    ></script>
+  </body>
+</html>
