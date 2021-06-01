@@ -99,12 +99,12 @@ function Model() {
       showMessage("Error", "Mask or Donor is empty!");
       return;
     }
+    console.log("Mask --->", mask);
     this.stateChangeEvent.notify(ModelState.INPAINT_STARTED);
     var data = "mask=" + encodeURIComponent(mask);
-    console.log(mask);
     makeRequest({
       method: "POST",
-      url: "https://theinpaint.com/editor/1562085950/FzyUXWMGk/process",
+      url: getUrl() + "/process",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: data,
     })
@@ -112,10 +112,7 @@ function Model() {
         if (response) {
           var reply = JSON.parse(response);
           var rect = new Rect(reply);
-          loadImage(
-            "https://theinpaint.com/editor/1562085950/FzyUXWMGk/image?" +
-              new Date().getTime()
-          ).then((image) => {
+          loadImage().then((image) => {
             var newImage = cropImage(image, rect);
             var oldImage = cropImage(this.layer(LayerNames.Image).canvas, rect);
             var group = new GroupUndoCommand();
@@ -140,7 +137,7 @@ function Model() {
         }
       })
       .catch((err) => {
-        showMessage("Error", "Processing failed!");
+        showMessage("Error", "Processing failed, Data displayed on console");
       });
   };
 }

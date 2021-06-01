@@ -1,3 +1,4 @@
+// Rect makes the rectangle shape of the Donor area
 function Rect(rect) {
   if (rect === undefined) {
     this.x = 0;

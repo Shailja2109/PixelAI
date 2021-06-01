@@ -1,3 +1,14 @@
+/*
+Utility functions
+*/
+
+// Make url using ip & port and add queries.
+function getUrl() {
+  var query = window.location.pathname.split("/");
+  return "/editor/" + query[2] + "/" + query[3];
+}
+
+// options : method, url, request, body
 function makeRequest(options) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -20,13 +31,15 @@ function makeRequest(options) {
     xhr.send(options.body);
   });
 }
+
+// load image in canvas
 function loadImage(url) {
   url = "images/192.jpg";
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "Anonymous";
-    image.onload = async () => {
-      await resolve(image);
+    image.onload = () => {
+      resolve(image);
     };
     image.onerror = () => {
       reject();

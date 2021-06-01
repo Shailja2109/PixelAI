@@ -1,7 +1,9 @@
+// Interface event to attach event listners
 var Event = function (sender) {
   this._sender = sender;
   this._listeners = [];
 };
+
 Event.prototype = {
   attach: function (listener) {
     if (listener) this._listeners.push(listener);

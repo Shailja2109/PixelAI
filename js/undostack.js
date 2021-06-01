@@ -1,3 +1,6 @@
+/* File contains the functions used to undo and redo operations on canvas */
+
+// undo and redo command - self called commands attached can be attached to variables
 function GroupUndoCommand() {
   var commands = [];
   this.undo = function () {
@@ -14,6 +17,8 @@ function GroupUndoCommand() {
     commands.push(cmd);
   };
 }
+
+// maintain undo stack
 function UndoStack(model) {
   var undoStack = [];
   var undoCursor = -1;

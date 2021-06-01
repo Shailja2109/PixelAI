@@ -10,16 +10,21 @@ var colors = {
   donor: "rgb(0,255,0)",
   erase: "rgb(255,255,255)",
 };
+
+//scribble attaches layer and action -
 function ScribbleCommand(layer, action) {
   this.layer = layer;
   this.action = action;
 }
+// reverts last action in layer added in scribble command.
 ScribbleCommand.prototype.undo = function () {
   this.layer.removeAction(this.action);
 };
+// reverts next action in layer added in scribble command.
 ScribbleCommand.prototype.redo = function () {
   this.layer.addAction(this.action);
 };
+// clears layer added in scribble clear command.
 function ScribbleClearCommand(layer) {
   this.layer = layer;
   this.actions = layer.actions;
@@ -32,10 +37,12 @@ ScribbleClearCommand.prototype.redo = function (model) {
   this.layer.actions = [];
   this.layer.drawLayer();
 };
+// Add color based on donor and mask type
 function ScribbleAction(color, type) {
   this.type = type;
   this.color = color;
 }
+// Change color according to marker type - Donor or Mask, linewidth - from slider, points - ClientX & ClientY
 function MarkerAction(color, lineWidth, points) {
   ScribbleAction.apply(this, [color, MARKER]);
   this.lineWidth = lineWidth;
@@ -66,6 +73,9 @@ MarkerAction.prototype.boundingRect = function () {
   }
   return rect;
 };
+
+// Marker Tool sets the tool and allows to add event listners like mousemove, mouseup and mousedown to draw mask using it.
+// Takes last action and view as argument
 function MarkerTool(undoStack, view) {
   LayerTool.apply(this, [view]);
   this.undoStack = undoStack;
@@ -123,6 +133,7 @@ MarkerTool.prototype.mouseDown = function (event) {
     );
   }
 };
+// setLineWidth change on slider
 MarkerTool.prototype.setLineWidth = function (val) {
   this.lineWidth = val;
   this.view.setCursor(this.cursor());
@@ -133,6 +144,8 @@ MarkerTool.prototype.draw = function (ctx) {
     this.markerAct.draw(ctx);
   }
 };
+// LassoAction takes color - green / red as input and makes mask using lasso tool of same color.
+// Takes last action and view as argument
 function LassoAction(color) {
   ScribbleAction.apply(this, [color, LASSO]);
   this.points = [];
@@ -157,6 +170,8 @@ LassoAction.prototype.clearPoints = function () {
 LassoAction.prototype.addPoint = function (pt) {
   this.points.push([pt.x, pt.y]);
 };
+// Event listners are added in LassoTool to make mask on mouseup, mousemove and mousedown.
+// Takes last action and view as argument
 function LassoTool(undoStack, view) {
   LayerTool.apply(this, [view]);
   this.undoStack = undoStack;
@@ -200,6 +215,9 @@ LassoTool.prototype.draw = function (ctx) {
   }
   ctx.stroke();
 };
+// Polygon tool is like draw line tool to make polygon from points.
+// Takes last action and view as argument.
+// Added eventlistners mousemove, mouseup and mousedown to make mask
 function PolygonTool(undoStack, view) {
   LassoTool.apply(this, [undoStack, view]);
   this.undoStack = undoStack;
@@ -267,6 +285,7 @@ PolygonTool.prototype.draw = function (ctx) {
   ctx.stroke();
   this.action.points.pop();
 };
+// Scribble layer - Size of the image is set as the layer size to have mask image of same size
 function ScribbleLayer(size, layerId) {
   Layer.apply(this, arguments);
   this.opacity = 50;
@@ -316,12 +335,14 @@ ScribbleLayer.prototype.removeAction = function (action) {
 ScribbleLayer.prototype.hasActions = function () {
   return this.actions.length != 0;
 };
+// make rect using
 function inflateRect(rect, dx, dy, width, height) {
   rect.setLeft(Math.max(rect.left() - dx, 0));
   rect.setTop(Math.max(rect.top() - dy, 0));
   rect.setRight(Math.min(rect.right() + dx, width - 1));
   rect.setBottom(Math.min(rect.bottom() + dy, height - 1));
 }
+// if mask is changed to change the donor layer to make masks bounded within it.
 function maskChanged() {
   if (this.mask.hasActions() && this.actions.length == 0) {
     this.addAction(this.action);
@@ -341,6 +362,7 @@ function maskChanged() {
   this.action.addPoint(rect.bottomLeft());
   this.drawLayer();
 }
+// Change the size of donor layer according to the masks
 function DonorLayer(mask, layerId) {
   ScribbleLayer.apply(this, [mask.size(), layerId]);
   this.visible = false;

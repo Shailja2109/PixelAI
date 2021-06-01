@@ -8,6 +8,7 @@ function Editor(model, mainCanvas) {
   };
   model.undoStack.indexChangedEvent.attach(undoIndexChanged.bind(this));
   var mainView = new LayersView(mainCanvas, model.imageSize);
+  mainView.zoomChangedEvent.attach(zoomChanged.bind(this));
   mainView.toolChangedEvent.attach(toolChanged.bind(this));
   mainView.addLayer(model.layer(LayerNames.Image));
   mainView.addLayer(model.layer(LayerNames.Mask));
@@ -24,6 +25,7 @@ function Editor(model, mainCanvas) {
   var moveTool = new MoveTool(mainView);
   initButtons();
   undoIndexChanged();
+  mainView.zoomToFit();
   mainView.setTool(markerTool);
   mainView.setActiveLayer(model.layer(LayerNames.Mask));
   function getAct(name, arg) {
@@ -76,10 +78,61 @@ function Editor(model, mainCanvas) {
     this.markerSlider.style.display =
       mainView.tool == markerTool ? "block" : "none";
   }
+  function zoomChanged(view) {
+    setButtonEnabled("zoomOut", !(mainView.getScale() <= MIN_ZOOM_FACTOR));
+    setButtonEnabled("zoomIn", !(mainView.getScale() >= MAX_ZOOM_FACTOR));
+  }
   this.fitToContainer = function () {
     mainView.resizeCanvas();
+    self.zoomToFit();
   };
-
+  this.downloadLowRes = function () {
+    var originalCanvas = model.layer(LayerNames.Image).canvas;
+    var scale = Math.min(
+      600 / originalCanvas.width,
+      600 / originalCanvas.height
+    );
+    var canvas = document.createElement("canvas");
+    canvas.width = originalCanvas.width * scale;
+    canvas.height = originalCanvas.height * scale;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(originalCanvas, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      function (blob) {
+        saveAs(blob, "image.jpg");
+      },
+      "image/jpeg",
+      0.95
+    );
+  };
+  this.download = function () {
+    var canvas = model.layer(LayerNames.Image).canvas;
+    makeRequest({ method: "GET", url: getUrl() + "/download" })
+      .then((response) => {
+        canvas.toBlob(
+          function (blob) {
+            saveAs(blob, "image.jpg");
+          },
+          "image/jpeg",
+          0.95
+        );
+      })
+      .catch((err) => {
+        showOrderDlg();
+      });
+  };
+  this.zoomIn = function () {
+    mainView.zoomIn();
+  };
+  this.zoomOut = function () {
+    mainView.zoomOut();
+  };
+  this.zoomToOrig = function () {
+    mainView.zoomToOrig();
+  };
+  this.zoomToFit = function () {
+    mainView.zoomToFit();
+  };
   this.undo = function () {
     this.model.undoStack.undo();
   };

@@ -1,4 +1,7 @@
+var MIN_ZOOM_FACTOR = 1 / 4;
+var MAX_ZOOM_FACTOR = 4;
 function LayersView(incanvas, imgSize) {
+  this.zoomChangedEvent = new Event(this);
   this.offsetChangedEvent = new Event(this);
   this.toolChangedEvent = new Event(this);
   var imageSize = imgSize;
@@ -8,7 +11,7 @@ function LayersView(incanvas, imgSize) {
   var layers = [];
   var scale = 1;
   var offset = { x: 0, y: 0 };
-  this.activeLayer = 0;
+  this.activeLayer = null;
   this.tool = 0;
   var startScale = null;
   var startDistance = null;
@@ -24,6 +27,7 @@ function LayersView(incanvas, imgSize) {
   window.addEventListener("resize", this.resizeCanvas, false);
   this.resizeCanvas = function () {
     fitToContainer(canvas);
+    this.zoomToFit();
   };
   this.setActiveLayer = function (layer) {
     this.activeLayer = layer;
@@ -139,6 +143,24 @@ function LayersView(incanvas, imgSize) {
     }
   }
   var scaleStep = 1.2;
+  this.zoomIn = function () {
+    this.setScale(scale * scaleStep);
+  };
+  this.zoomOut = function () {
+    this.setScale(scale / scaleStep);
+  };
+  this.zoomToOrig = function () {
+    scale = 1;
+    this.centerImage();
+    this.zoomChangedEvent.notify();
+  };
+  this.zoomToFit = function () {
+    var sw = canvas.width / imageSize.width;
+    var sh = canvas.height / imageSize.height;
+    scale = sw > sh ? sh : sw;
+    this.centerImage();
+    this.zoomChangedEvent.notify();
+  };
   this.centerImage = function () {
     offset.x = canvas.width / 2 - (imageSize.width * scale) / 2;
     offset.y = canvas.height / 2 - (imageSize.height * scale) / 2;
@@ -158,10 +180,18 @@ function LayersView(incanvas, imgSize) {
       canvasPos = { x: width / 2, y: height / 2 };
     }
     var pos1 = canvas2image(canvasPos);
+    if (factor < MIN_ZOOM_FACTOR) {
+      scale = MIN_ZOOM_FACTOR;
+    } else if (factor > MAX_ZOOM_FACTOR) {
+      scale = MAX_ZOOM_FACTOR;
+    } else {
+      scale = factor;
+    }
     var pos2 = canvas2image(canvasPos);
     offset.x -= (pos1.x - pos2.x) * scale;
     offset.y -= (pos1.y - pos2.y) * scale;
     this.update();
+    this.zoomChangedEvent.notify();
   };
   this.getOffset = function () {
     return offset;
